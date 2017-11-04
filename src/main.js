@@ -2,7 +2,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 
 function preload() {
     console.log("preload")
-    var test = game.load.image('test', 'assets/c.png')
+    var test = game.load.image('test', 'assets/test.png')
 
 }
 

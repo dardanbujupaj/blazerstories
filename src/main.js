@@ -40,7 +40,7 @@ function create() {
 
     character = game.add.sprite(320, 240, 'char');
     game.physics.arcade.enable(character)
-    character.body.gravity.y = 100
+    character.body.gravity.y = 500
     character.anchor.setTo(0.5, 0.5)
     game.camera.follow(character)
 }
@@ -54,20 +54,25 @@ function update() {
         character.x -= speed;
         character.angle = -15;
     }
-    else if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
     {
         character.x += speed;
         character.angle = 15;
     }
-    else if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
     {
         character.y -= speed;
         character.angle = 75;
     }
-    else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
     {
         character.y += speed;
         character.angle = -75;
+    }
+
+  if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
+    {
+        character.body.velocity.setTo(0, -400);
     }
     else
     {

@@ -32,11 +32,11 @@ function create() {
 
     //c = game.add.sprite(40, 0, 'test')
 
-    game.add.sprite(0, 360, 'groundTile1');
-    game.add.sprite(0, 400, 'groundTile2');
-    game.add.sprite(200, 120, 'groundTile6');
-    game.add.sprite(-60, 120, 'groundTile7');
-    game.add.sprite(900, 170, 'groundTile8');
+    floor.create(0, 360, 'groundTile1');
+    floor.create(0, 400, 'groundTile2');
+    floor.create(200, 120, 'groundTile6');
+    floor.create(-60, 120, 'groundTile7');
+    floor.create(900, 170, 'groundTile8');
 
     character = game.add.sprite(320, 240, 'char');
     game.physics.arcade.enable(character)

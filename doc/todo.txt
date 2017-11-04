@@ -1,0 +1,7 @@
+Graphics:
+
+Engine:
+- Loading a level
+- Characteremovement
+- 1 Powerup
+- 1 Enemy

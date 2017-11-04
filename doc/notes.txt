@@ -1,0 +1,15 @@
+Jump'n'run game
+
+
+Story
+- Aliens greifen die Erde an
+- Der Alienchief und der Präsident der Erde streiten sich und es droht ein Krieg auszubrechen
+- Wir müssen um dies zu verhindern müssen wir ein uraltes Artefakt, die Friedenspfeife, finden um Frieden zwischen die beiden zu bringen
+- Die Friedenspfeife wurde von einem Bösewicht gestohlen und versteckt. Diese Bösewicht möchte dass ein Krieg ausbricht, damit er die Herrschaft übernehmen kann.
+- Während der Suche kommen wir in verschiedene Regionen
+
+Mit Pillen kann die Realität für eine gewisse Zeit verändert werden
+- Dimension ändern -> Gelände ist anders, so können Hindernisse überwunden werden
+- Zeit einfrieren -> Gegner bewegen sich nicht mehr
+- Boost -> man rennt schneller und kann weiter springen
+

@@ -1,0 +1,23 @@
+= Blazerstories
+
+Entry for https://itch.io/jam/game-off-2017[Game Off 2017].
+
+== About
+...
+
+== Team
+Just some guys at their first attempt, to develop a game within a month.
+
+https://github.com/gantneba[Benjamin "gantneba" Gantner] - Programming
+
+https://github.com/Saravanabawan[Alan Saravanabawan] - Graphics & Design
+
+https://github.com/dardanbujupaj[Dardan Bujupaj] - Programming
+
+== Installation 
+You'll need `npm` from the https://nodejs.org/en/[NodeJS Environment] on your computer.
+
+Clone the repository and run `npm install`. Then run `npm start`, your browser should open the game now, if not visit the url http://localhost:3000/. 
+
+== Contributing / Feedback
+Feel free to send us a message with your thoughts or open an issue. We'll give our best to incorporate your feedback.

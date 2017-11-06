@@ -2,6 +2,10 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 
 var character, floor
 var speed = 4
+var arrow
+
+var fireRate = 100;
+var nextFire = 0;
 
 function preload() {
     console.log("preload")
@@ -14,7 +18,8 @@ function preload() {
     game.load.image('groundTile7', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_007.png')
     game.load.image('groundTile8', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_008.png')
     game.load.image('char', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_055.png')
-
+    game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
+    game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
 }
 
 function create() {
@@ -29,7 +34,12 @@ function create() {
         tile.body.immovable = true
     }
 
-
+    arrow = game.add.group();
+    arrow.enableBody = true;
+    arrow.physicsBodyType = Phaser.Physics.ARCADE;
+    arrow.createMultiple(50, 'arrow');
+    arrow.setAll('checkWorldBounds', true);
+    arrow.setAll('outOfBoundsKill', true);
     //c = game.add.sprite(40, 0, 'test')
 
     floor.create(0, 360, 'groundTile1');
@@ -47,6 +57,10 @@ function create() {
 
 function update() {
 
+  if (game.input.keyboard.isDown(Phaser.Keyboard.ENTER))
+      {
+          fire();
+      }
     game.physics.arcade.collide(character, floor)
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
@@ -76,7 +90,21 @@ function update() {
     }
     else
     {
-        character.rotation = 0;
+
+        //character.rotation = 0;
+    }
+
+}
+function fire() {
+
+    if (game.time.now > nextFire && arrow.countDead() > 0)
+    {
+      console.log("fire")
+        nextFire = game.time.now + fireRate;
+        var shot = arrow.getFirstDead();
+
+        shot.reset(character.x - 8, character.y - 8);
+        game.physics.arcade.moveToPointer(shot, 300);
     }
 
 }

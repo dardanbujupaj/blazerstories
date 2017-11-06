@@ -4,6 +4,7 @@ var character, floor
 var speed = 4
 var arrow
 var enemy
+var sprite
 
 var fireRate = 100;
 var nextFire = 0;
@@ -21,7 +22,9 @@ function preload() {
     game.load.image('enemy1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_040.png')
     game.load.image('char', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_055.png')
     game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
+
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
+    game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
 }
 
 function create() {
@@ -62,11 +65,7 @@ function create() {
     character.anchor.setTo(0.5, 0.5)
     game.camera.follow(character)
 
-    enemy = game.add.sprite(500, 100, 'enemy1')
-    game.physics.arcade.enable(enemy)
-    enemy.body.gravity.y = 200
-    enemy.body.collideWorldBounds = true;
-    enemy.anchor.setTo(0.5, 0.5)
+    createEnemy()
 }
 
 function update() {
@@ -84,7 +83,10 @@ function update() {
       destroySprite(enemy)
 
     }
-
+    if (game.input.keyboard.isDown(Phaser.Keyboard.E))
+      {
+        createEnemy()
+      }
   if (game.input.keyboard.isDown(Phaser.Keyboard.A))
     {
         character.x -= speed;
@@ -133,9 +135,27 @@ function fire() {
 
 function explode(enemy){
   console.log("BOOM")
+  createAnimation(enemy.x, enemy.y)
 
   //enemy.events.onInputDown.add(destroySprite, this);
 }
+function createAnimation(x, y){
+  sprite = game.add.sprite(x, y, 'explosion')
+  sprite.anchor.setTo(0.5,0.5)
+  sprite.animations.add('explode', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
+  sprite.animations.play('explode', 20, true)
+  sprite.scale.set(0.2)
+  sprite.smoothed = false
+
+}
 function destroySprite (sprite){
   sprite.destroy()
+}
+
+function createEnemy(){
+  enemy = game.add.sprite(500, 100, 'enemy1')
+  game.physics.arcade.enable(enemy)
+  enemy.body.gravity.y = 500
+  enemy.body.collideWorldBounds = true;
+  enemy.anchor.setTo(0.5, 0.5)
 }

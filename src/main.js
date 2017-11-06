@@ -38,6 +38,7 @@ function create() {
     arrow.enableBody = true;
     arrow.physicsBodyType = Phaser.Physics.ARCADE;
     arrow.createMultiple(50, 'arrow');
+
     arrow.setAll('checkWorldBounds', true);
     arrow.setAll('outOfBoundsKill', true);
     //c = game.add.sprite(40, 0, 'test')
@@ -51,34 +52,36 @@ function create() {
     character = game.add.sprite(320, 240, 'char');
     game.physics.arcade.enable(character)
     character.body.gravity.y = 500
+    character.body.collideWorldBounds = true;
     character.anchor.setTo(0.5, 0.5)
     game.camera.follow(character)
 }
 
 function update() {
 
-  if (game.input.keyboard.isDown(Phaser.Keyboard.ENTER))
+  if (game.input.activePointer.isDown)
       {
+
           fire();
       }
     game.physics.arcade.collide(character, floor)
 
-  if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.A))
     {
         character.x -= speed;
         character.angle = -15;
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.D))
     {
         character.x += speed;
         character.angle = 15;
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.W))
     {
         character.y -= speed;
         character.angle = 75;
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.S))
     {
         character.y += speed;
         character.angle = -75;
@@ -102,9 +105,18 @@ function fire() {
       console.log("fire")
         nextFire = game.time.now + fireRate;
         var shot = arrow.getFirstDead();
-
-        shot.reset(character.x - 8, character.y - 8);
+        shot.anchor.setTo(0.9,0.5)
+        shot.rotation = game.physics.arcade.angleToPointer(character)
+        console.log(shot.rotation)
+        //arrow.rotation = game.physics.arcade.angleToPointer(arrow) - 90;
+        shot.reset(character.x, character.y);
         game.physics.arcade.moveToPointer(shot, 300);
     }
 
+}
+function toRadians (angle){
+  return angle * (Math.PI / 180);
+}
+function toDegree (angle){
+  return angle * (180 / Math.PI);
 }

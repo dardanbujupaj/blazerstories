@@ -100,12 +100,12 @@ function update() {
   if (game.input.keyboard.isDown(Phaser.Keyboard.W))
     {
         character.y -= speed;
-        character.angle = 75;
+        character.angle = 25;
     }
   if (game.input.keyboard.isDown(Phaser.Keyboard.S))
     {
         character.y += speed;
-        character.angle = -75;
+        character.angle = -25;
     }
   if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
     {
@@ -143,7 +143,7 @@ function createAnimation(x, y){
   sprite = game.add.sprite(x, y, 'explosion')
   sprite.anchor.setTo(0.5,0.5)
   sprite.animations.add('explode', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
-  sprite.animations.play('explode', 20, true)
+  sprite.animations.play('explode', 15, false, true)
   sprite.scale.set(0.2)
   sprite.smoothed = false
 

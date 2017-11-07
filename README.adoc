@@ -14,7 +14,7 @@ https://github.com/Saravanabawan[Alan Saravanabawan] - Graphics & Design
 
 https://github.com/dardanbujupaj[Dardan Bujupaj] - Programming
 
-https://github.com/alpha2412[Raphael Däster] - Project Lead
+https://github.com/alpha2412[Raphael Däster] - Project Manager
 
 == Installation 
 You'll need `npm` from the https://nodejs.org/en/[NodeJS Environment] on your computer.

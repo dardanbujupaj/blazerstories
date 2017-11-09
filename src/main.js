@@ -6,6 +6,8 @@ var arrow
 var enemy
 var sprite
 var map, floorLayer
+var createMapMode = false
+
 
 var fireRate = 100;
 var nextFire = 0;
@@ -74,10 +76,14 @@ function create() {
 
 function update() {
 
-  if (game.input.activePointer.isDown)
-      {
-          fire();
-      }
+    if (createMapMode) {
+        updateMapMarker()
+    } else {
+        if (game.input.activePointer.isDown) {
+            fire();
+        }
+    }
+
 
     game.physics.arcade.collide(character, floor)
     game.physics.arcade.collide(character, floorLayer)
@@ -90,18 +96,23 @@ function update() {
       destroySprite(enemy)
 
     }
+
+    character.body.velocity.x = 0
+
     if (game.input.keyboard.isDown(Phaser.Keyboard.E))
       {
         createEnemy()
       }
   if (game.input.keyboard.isDown(Phaser.Keyboard.A))
     {
-        character.x -= speed;
+        //character.x -= speed;
+        character.body.velocity.x -= 200
         character.angle = -15;
     }
   if (game.input.keyboard.isDown(Phaser.Keyboard.D))
     {
-        character.x += speed;
+        //character.x += speed;
+        character.body.velocity.x += 200
         character.angle = 15;
     }
   if (game.input.keyboard.isDown(Phaser.Keyboard.W))
@@ -128,6 +139,7 @@ function update() {
 
 function render() {
     game.debug.text(game.input.mousePointer.x + "/" + game.input.mousePointer.y, 0, 15)
+    game.debug.text("edit: " + createMapMode, 0, 30)
 }
 
 function fire() {
@@ -211,5 +223,20 @@ function createMap() {
     //        let tile = map.putTileWorldXY(0, pointer.x, pointer.y, layer)
     //    }
     //})
+    let toggleKey = game.input.keyboard.addKey(Phaser.Keyboard.M)
+    toggleKey.onDown.add(() => createMapMode = !createMapMode)
+}
+
+function updateMapMarker() {
+    let pointer = game.input.mousePointer
+    if (pointer.isDown) {
+        let tileId
+        if (game.input.keyboard.isDown(Phaser.Keyboard.SHIFT)) {
+            tileId = -1
+        } else {
+            tileId = 0
+        }
+        let tile = map.putTileWorldXY(tileId, pointer.worldX, pointer.worldY, 32, 32, floorLayer)
+    }
 
 }

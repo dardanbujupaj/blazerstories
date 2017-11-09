@@ -1,10 +1,11 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
 var character, floor
 var speed = 4
 var arrow
 var enemy
 var sprite
+var map, floorLayer
 
 var fireRate = 100;
 var nextFire = 0;
@@ -25,6 +26,9 @@ function preload() {
 
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
     game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
+
+
+    preloadMap()
 }
 
 function create() {
@@ -40,10 +44,10 @@ function create() {
     enemy = game.add.group()
     enemy.enableBody = true
 
-    for (var i = 0; i < 30; i++) {
-        var tile = floor.create(i * 32, 300, 'test')
-        tile.body.immovable = true
-    }
+    // dynamic floormap
+    createMap()
+
+
     floor.create(0, 360, 'groundTile1');
     floor.create(0, 400, 'groundTile2');
     floor.create(200, 120, 'groundTile6');
@@ -76,7 +80,10 @@ function update() {
       }
 
     game.physics.arcade.collide(character, floor)
-    game.physics.arcade.collide(enemy, floor)
+    game.physics.arcade.collide(character, floorLayer)
+    game.physics.arcade.collide(enemy, floorLayer)
+    game.physics.arcade.collide(floor, floorLayer)
+    game.physics.arcade.collide(enemy, map)
     game.physics.arcade.collide(enemy, character)
     if (game.physics.arcade.collide(arrow, enemy)){
       explode(enemy);
@@ -118,6 +125,11 @@ function update() {
     }
 
 }
+
+function render() {
+    game.debug.text(game.input.mousePointer.x + "/" + game.input.mousePointer.y, 0, 15)
+}
+
 function fire() {
 
     if (game.time.now > nextFire && arrow.countDead() > 0)
@@ -158,4 +170,46 @@ function createEnemy(){
   enemy.body.gravity.y = 500
   enemy.body.collideWorldBounds = true;
   enemy.anchor.setTo(0.5, 0.5)
+}
+
+
+
+// Map stuff
+
+function preloadMap() {
+    // loading tilesets
+    game.load.image('testTileImage', '../assets/test.png')
+    // game.load.image('secondTileset', '../assets/seconttileset.png')
+
+    // load Map JSON?
+
+}
+
+function createMap() {
+    map = game.add.tilemap()
+    map.addTilesetImage('testTileImage')
+    floorLayer = map.create('layer1', 50, 50, 32, 32)
+    
+    // Mockup map
+    for (let i = 0; i < 20; i++) {
+        map.putTile(0, i, 10, floorLayer)
+    }
+    for (let i = 22; i < 50; i++) {
+        map.putTile(0, i, 15, floorLayer)
+    }
+    
+    for (let i = 25; i < 50; i++) {
+        map.putTile(0, i, 12, floorLayer)
+    }
+    
+    map.setCollision([0], true, floorLayer)
+
+    // add Tiles 
+    //gameObject.input.addMoveCallback(function () {
+    //    let pointer = gameObject.input.mousePointer
+    //    if (pointer.isDown) {
+    //        let tile = map.putTileWorldXY(0, pointer.x, pointer.y, layer)
+    //    }
+    //})
+
 }

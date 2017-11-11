@@ -2,7 +2,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 
 var character, floor
 var speed = 4
-var arrow
+var arrows
 var enemy
 var sprite
 var map, floorLayer
@@ -40,8 +40,9 @@ function create() {
 
     floor = game.add.group()
     floor.enableBody = true
-    arrow = game.add.group();
-    arrow.enableBody = true;
+
+    arrows = game.add.group();
+    arrows.enableBody = true;
 
     enemy = game.add.group()
     enemy.enableBody = true
@@ -56,10 +57,11 @@ function create() {
     floor.create(-60, 120, 'groundTile7');
     floor.create(900, 170, 'groundTile8');
 
-    arrow.physicsBodyType = Phaser.Physics.ARCADE;
-    arrow.createMultiple(50, 'arrow');
-    arrow.setAll('checkWorldBounds', true);
-    arrow.setAll('outOfBoundsKill', true);
+    arrows.physicsBodyType = Phaser.Physics.ARCADE;
+    arrows.createMultiple(50, 'arrow');
+
+    arrows.setAll('checkWorldBounds', true);
+    arrows.setAll('outOfBoundsKill', true);
     //c = game.add.sprite(40, 0, 'test')
 
 
@@ -91,15 +93,16 @@ function update() {
     game.physics.arcade.collide(floor, floorLayer)
     game.physics.arcade.collide(enemy, map)
     game.physics.arcade.collide(enemy, character)
-    if (game.physics.arcade.collide(arrow, enemy)){
-      explode(enemy);
-      destroySprite(enemy)
+    game.physics.arcade.collide(arrows, floorLayer, function(arrows){arrows.kill();})
+    game.physics.arcade.overlap(arrows, enemy, function(enemy, arrows){arrows.kill(); explode(enemy); enemy.kill();})
+      //explode(enemy);
+      //destroySprite(enemy)
 
-    }
+
 
     character.body.velocity.x = 0
 
-    if (game.input.keyboard.isDown(Phaser.Keyboard.E))
+    if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1))
       {
         createEnemy()
       }
@@ -144,11 +147,11 @@ function render() {
 
 function fire() {
 
-    if (game.time.now > nextFire && arrow.countDead() > 0)
+    if (game.time.now > nextFire && arrows.countDead() > 0)
     {
       console.log("fire")
         nextFire = game.time.now + fireRate;
-        var shot = arrow.getFirstDead();
+        var shot = arrows.getFirstDead();
         shot.anchor.setTo(0.9,0.5)
         shot.rotation = game.physics.arcade.angleToPointer(character)
         shot.reset(character.x, character.y);
@@ -201,7 +204,7 @@ function createMap() {
     map = game.add.tilemap()
     map.addTilesetImage('testTileImage')
     floorLayer = map.create('layer1', 50, 50, 32, 32)
-    
+
     // Mockup map
     for (let i = 0; i < 20; i++) {
         map.putTile(0, i, 10, floorLayer)
@@ -209,14 +212,14 @@ function createMap() {
     for (let i = 22; i < 50; i++) {
         map.putTile(0, i, 15, floorLayer)
     }
-    
+
     for (let i = 25; i < 50; i++) {
         map.putTile(0, i, 12, floorLayer)
     }
-    
+
     map.setCollision([0], true, floorLayer)
 
-    // add Tiles 
+    // add Tiles
     //gameObject.input.addMoveCallback(function () {
     //    let pointer = gameObject.input.mousePointer
     //    if (pointer.isDown) {

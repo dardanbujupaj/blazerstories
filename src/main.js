@@ -146,10 +146,15 @@ function update() {
 
 function render() {
     game.debug.text(game.input.mousePointer.x + "/" + game.input.mousePointer.y, 0, 15)
-    game.debug.text("edit: " + createMapMode, 0, 30)
     game.debug.text("bullets: " + arrows.countLiving(), 0, 45)
     game.debug.text("weaponNumber: " + weaponNumber, 0, 60)
     game.debug.text("weaponType: " + weaponType, 0, 75)
+    
+    if (createMapMode) {
+        game.debug.text("mapeditor active", 600, 15)
+        game.debug.text("tileindex: " + 0, 600, 30)
+        //game.debug.text("Mapeditor active" + createMapMode, 0, 15)
+    }
 }
 
 function fire(weaponType) {
@@ -198,16 +203,6 @@ function createEnemy(){
 
 
 
-// Map stuff
-
-function preloadMap() {
-    // loading tilesets
-    game.load.image('testTileImage', '../assets/test.png')
-    // game.load.image('secondTileset', '../assets/seconttileset.png')
-
-    // load Map JSON?
-
-}
 function switchWeapon()
 {
   weaponNumber++
@@ -230,21 +225,27 @@ function createWeapon(){
 
 
 
+// Map stuff
+
+function preloadMap() {
+    // loading tilesets
+    game.load.image('testTileImage', 'assets/test.png')
+    // game.load.image('secondTileset', '../assets/seconttileset.png')
+
+    // load Map JSON?
+
+}
+
 function createMap() {
     map = game.add.tilemap()
     map.addTilesetImage('testTileImage')
     floorLayer = map.create('layer1', 50, 50, 32, 32)
 
-    // Mockup map
-    for (let i = 0; i < 20; i++) {
-        map.putTile(0, i, 10, floorLayer)
-    }
-    for (let i = 22; i < 50; i++) {
-        map.putTile(0, i, 15, floorLayer)
-    }
-
-    for (let i = 25; i < 50; i++) {
-        map.putTile(0, i, 12, floorLayer)
+    try {
+        createMapTiles(JSON.parse(localStorage.mapData))
+    } catch (e) {
+        console.debug("failed to load mapdata", e)
+        createMapTiles(getMockupMap())
     }
 
     map.setCollision([0], true, floorLayer)
@@ -258,18 +259,84 @@ function createMap() {
     //})
     let toggleKey = game.input.keyboard.addKey(Phaser.Keyboard.M)
     toggleKey.onDown.add(() => createMapMode = !createMapMode)
+
+    let exportKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC)
+    exportKey.onDown.add(() => {
+        if (createMapMode) {
+            exportMapDataAlert()
+        }
+    })
 }
+
+let saveMapTimeout
 
 function updateMapMarker() {
     let pointer = game.input.mousePointer
     if (pointer.isDown) {
-        let tileId
+    let tileId
         if (game.input.keyboard.isDown(Phaser.Keyboard.SHIFT)) {
             tileId = -1
         } else {
             tileId = 0
         }
         let tile = map.putTileWorldXY(tileId, pointer.worldX, pointer.worldY, 32, 32, floorLayer)
+
+
+        
+        clearTimeout(saveMapTimeout)
+        saveMapTimeout = setTimeout(saveCurrentMap, 1000)
     }
 
+}
+
+function loadMapData() {
+
+
+}
+
+function exportMapDataAlert() {
+    console.log("export")
+    var a = document.createElement("a")
+    var file = new Blob([localStorage.mapData], {type: 'text/json'})
+    a.href = URL.createObjectURL(file)
+    a.download = "map.json"
+    a.click()
+    console.log(a)
+}
+
+
+function saveCurrentMap() {
+    var data = []
+    console.log(floorLayer.layer.data)
+    floorLayer.layer.data.forEach( row => {
+        row.forEach ( tile => {
+            data.push({index: tile.index, x: tile.x, y:tile.y})
+        })
+    })
+
+    localStorage.mapData = JSON.stringify(data)
+}
+
+function createMapTiles(tiles) {
+    tiles.forEach ( tile => {
+        map.putTile(tile.index, tile.x, tile.y, floorLayer) 
+    })
+}
+
+function getMockupMap() {
+    var data = []
+    
+    // Mockup map
+    for (let i = 0; i < 20; i++) {
+        data.push({index: 0, x: i, y:10})
+    }
+    for (let i = 22; i < 50; i++) {
+        data.push({index: 0, x: i, y:15})
+    }
+
+    for (let i = 25; i < 50; i++) {
+        data.push({index: 0, x: i, y:12})
+    }
+
+    return data
 }

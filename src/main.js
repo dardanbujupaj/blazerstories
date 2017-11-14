@@ -6,6 +6,7 @@ var arrows
 var enemy
 var sprite
 var map, floorLayer
+let tileIndex = 0
 var createMapMode = false
 var weaponNumber = 1
 var weaponType = 'arrow'
@@ -152,7 +153,7 @@ function render() {
     
     if (createMapMode) {
         game.debug.text("mapeditor active", 600, 15)
-        game.debug.text("tileindex: " + 0, 600, 30)
+        game.debug.text("tileindex: " + tileIndex, 600, 30)
         //game.debug.text("Mapeditor active" + createMapMode, 0, 15)
     }
 }
@@ -229,7 +230,7 @@ function createWeapon(){
 
 function preloadMap() {
     // loading tilesets
-    game.load.image('testTileImage', 'assets/test.png')
+    game.load.image('testTileImage', 'assets/images/row.png')
     // game.load.image('secondTileset', '../assets/seconttileset.png')
 
     // load Map JSON?
@@ -248,7 +249,7 @@ function createMap() {
         createMapTiles(getMockupMap())
     }
 
-    map.setCollision([0], true, floorLayer)
+    map.setCollisionByExclusion([], true, floorLayer)
 
     // add Tiles
     //gameObject.input.addMoveCallback(function () {
@@ -259,6 +260,12 @@ function createMap() {
     //})
     let toggleKey = game.input.keyboard.addKey(Phaser.Keyboard.M)
     toggleKey.onDown.add(() => createMapMode = !createMapMode)
+
+    let up = game.input.keyboard.addKey(Phaser.Keyboard.UP)
+    up.onDown.add(() => tileIndex++)
+
+    let down = game.input.keyboard.addKey(Phaser.Keyboard.DOWN)
+    down.onDown.add(() => tileIndex--)
 
     let exportKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC)
     exportKey.onDown.add(() => {
@@ -273,11 +280,11 @@ let saveMapTimeout
 function updateMapMarker() {
     let pointer = game.input.mousePointer
     if (pointer.isDown) {
-    let tileId
+        let tileId
         if (game.input.keyboard.isDown(Phaser.Keyboard.SHIFT)) {
             tileId = -1
         } else {
-            tileId = 0
+            tileId = tileIndex
         }
         let tile = map.putTileWorldXY(tileId, pointer.worldX, pointer.worldY, 32, 32, floorLayer)
 

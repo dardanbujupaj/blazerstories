@@ -3,14 +3,24 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 var character, floor
 var speed = 4
 var arrows
-var enemy
+var enemies
 var sprite
 var map, floorLayer
+var enemyType = 'enemy1'
 var createMapMode = false
 var weaponNumber = 1
 var weaponType = 'arrow'
-var fireRate = 100;
+var fireRate = 300;
 var nextFire = 0;
+var nextEnemy = 0;
+var enemyCreateRate = 500;
+var levelNumber = 1
+var jumps = 0
+var lookRight = true
+var allowJump = true
+var isDead = false
+var weaponSpeed = 600
+var enemySpawnRAte = 4000
 
 function preload() {
     console.log("preload")
@@ -28,7 +38,8 @@ function preload() {
 
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
     game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
-
+    //leftWalkAnimation = player.animations.add('left', [4,5,6,7], 10, true);
+    //rightWalkAnimation = player.animations.add('right', [8,9,10,11], 10, true);
 
     preloadMap()
 }
@@ -41,25 +52,14 @@ function create() {
     floor = game.add.group()
     floor.enableBody = true
 
-
-
-    enemy = game.add.group()
-    enemy.enableBody = true
-
     // dynamic floormap
     createMap()
     createWeapon()
 
-    floor.create(0, 360, 'groundTile1');
-    floor.create(0, 400, 'groundTile2');
-    floor.create(200, 120, 'groundTile6');
-    floor.create(-60, 120, 'groundTile7');
-    floor.create(900, 170, 'groundTile8');
-
+    createLevel(1)
+    createEnemies()
 
     //c = game.add.sprite(40, 0, 'test')
-
-
 
     character = game.add.sprite(320, 240, 'char');
     game.physics.arcade.enable(character)
@@ -68,10 +68,10 @@ function create() {
     character.anchor.setTo(0.5, 0.5)
     game.camera.follow(character)
 
-    createEnemy()
-
     let toggleWeapon = game.input.keyboard.addKey(Phaser.Keyboard.Q)
     toggleWeapon.onDown.add(() => switchWeapon())
+
+
 }
 
 function update() {
@@ -84,64 +84,122 @@ function update() {
         }
     }
 
+    game.physics.arcade.collide(floor, character,
+      function(floor, character) {
+        jumps = 0;
+        allowJump = true
+        console.log("touching floor, jumps=0, allowJump = true")
+        /*if(character.body.touching.down == true){ //TRYING TO GET COLLISION TO WORK: FROM SIDE OF PLATFORM
+          jumps = 0;
+          allowJump = true
+          console.log("touching floor, jumps=0, allowJump = true")
+          }
+        else {
+          if (character.body.touching.left == true || character.body.touching.right == true) {
+          jumps = 1;
+          allowJump = true
+          console.log("touching floor, jumps=1, allowJump = true")
+        }}*/
+      }
+  )// character + floor collision: Wall jumps only 1 additional, ground 2 addiditional
+    game.physics.arcade.collide(floorLayer, character,
+      function(floorLayer, character){ //TRYING TO GET COLLISION TO WORK: FROM SIDES OF PLATFORMS
+        jumps = 0;
+        allowJump = true
+        //console.log("touching floorLayer, jumps=0, allowJump = true")
+        //console.log("up: " + floorLayer.body.touching.up + "  down: " + floorLayer.body.touching.down + "  right: " + floorLayer.body.touching.right + "  left: " + floorLayer.body.touching.left)
+        /*
+        if(floorLayer.body.touching.up == true){
+          jumps = 0;
+          allowJump = true;
+          console.log("touching floorLayer, jumps=0, allowJump = true")
+        }
+        if (floorLayer.body.touching.left == true || floorLayer.body.touching.right == true) {
+          jumps = 1;
+          allowJump = true;
+          console.log("touching floorLayer side, jumps=1, allowJump = true")
+        }
+        else{
+          allowJump = true
+        }*/
+      }
+  )// character + floor collision: Wall jumps only 1 additional, ground 2 addiditional
 
-
-    game.physics.arcade.collide(character, floor)
-    game.physics.arcade.collide(character, floorLayer)
-    game.physics.arcade.collide(enemy, floorLayer)
+    game.physics.arcade.collide(enemies, floorLayer)
     game.physics.arcade.collide(floor, floorLayer)
-    game.physics.arcade.collide(enemy, map)
-    game.physics.arcade.collide(enemy, character)
+    game.physics.arcade.collide(enemies, map)
+    game.physics.arcade.collide(enemies, character,
+      function(character, enemies){
+      jumps = 0;
+      allowJump = true;
+      //if(enemies.body.touching.up == true){character.velocity.y -= 200}
+      console.log("up: " + enemies.body.touching.up + "  down: " + enemies.body.touching.down + "  right: " + enemies.body.touching.right + "  left: " + enemies.body.touching.left)
+      if(enemies.body.touching.up == false && (enemies.body.touching.left == true || enemies.body.touching.right == true || enemies.body.touching.down == true))
+      {gameOver()}
+      else {
+        if (character.body.velocity.y >=-580){character.body.velocity.y -= 600}
+      }
+
+    }
+  )// enemies + character collision BOUNCE IF ON TOP, OTHERWISE "GAME OVER"
+
     //game.physics.arcade.collide(arrows, floorLayer, function(arrows){arrows.kill();})
     game.physics.arcade.overlap(arrows, floor, function(arrows){arrows.kill();})
     game.physics.arcade.collide(arrows, map, function(arrows){arrows.kill();})
-    game.physics.arcade.overlap(arrows, enemy, function(enemy, arrows){arrows.kill(); explode(enemy); enemy.kill();})
+    //kill(); dont know why this is here
+    console.log("arrows.x:"+ arrows.x + " and arrows.y: "+ arrows.y)})
       //explode(enemy);
       //destroySprite(enemy)
-
-
-
     character.body.velocity.x = 0
 
-    if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1))
+    if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1)) //Create test enemy to the right of the character
       {
-        createEnemy()
+        createSingleEnemy(character.x + 200, character.y - 150, 'enemy1')
       }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.A))
+
+  if (game.input.keyboard.isDown(Phaser.Keyboard.A)) //WALK LEFT
     {
         //character.x -= speed;
         character.body.velocity.x -= 200
         character.angle = -15;
-        //ADD ANIMATION
+        lookRight = false
+        //character.play('leftWalkAnimation') = implement once spritesheet is done
+
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.D))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.D)) //WALK RIGHT
     {
         //character.x += speed;
         character.body.velocity.x += 200
         character.angle = 15;
-        //ADD ANIMATION
+        lookRight = true
+        //character.play('rightWalkAnimation') = implement once spritesheet is done
+
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.W))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.W)) //"GO UP, LOOK UP" - USELESS
     {
-        character.y -= speed;
+        //character.body.velocity.y -= speed;
         character.angle = 10;
     }
-  if (game.input.keyboard.isDown(Phaser.Keyboard.S))
+  if (game.input.keyboard.isDown(Phaser.Keyboard.S)) //"GO DOWN, LOOK DOWN" - USELESS
     {
-        character.y += speed;
+        character.body.velocity.y += speed;
         character.angle = -5;
     }
-  if (game.input.keyboard.downDuration(Phaser.Keyboard.SPACEBAR, 340))
+  if (game.input.keyboard.downDuration(Phaser.Keyboard.SPACEBAR, 1)) //JUMP, double jump
     {
         //ADD ANIMATION
-        character.body.velocity.setTo(character.body.velocity.x, -480);
-    }
-    else
-    {
 
-        //character.rotation = 0;
+        if (jumps < 2 && allowJump){
+          jumps++
+          console.log("jumps used:" + jumps)
+          character.body.velocity.setTo(character.body.velocity.x, -530)
+        }
+        else {
+          jumps = 0
+          allowJump = false
+        }
+        //character.body.velocity.setTo(character.body.velocity.x, -530);
     }
-
 }
 
 function render() {
@@ -150,31 +208,26 @@ function render() {
     game.debug.text("bullets: " + arrows.countLiving(), 0, 45)
     game.debug.text("weaponNumber: " + weaponNumber, 0, 60)
     game.debug.text("weaponType: " + weaponType, 0, 75)
+    game.debug.text("allowJump?: " + allowJump, 0, 90)
 }
 
-function fire(weaponType) {
-
-    if (game.time.now > nextFire && arrows.countDead() > 0)
-    {
-      console.log("fire")
-        arrows.createMultiple(50, weaponType);
-        nextFire = game.time.now + fireRate;
-        var shot = arrows.getFirstDead();
-        shot.scale.setTo(0.5,0.5)
-        shot.anchor.setTo(0.9,0.5)
-        shot.rotation = game.physics.arcade.angleToPointer(character)
-        shot.reset(character.x, character.y);
-        game.physics.arcade.moveToPointer(shot, 300);
-    }
-
+function createLevel(levelNumber){ //TEST TILES
+  //load file "levelNumber" case 1 case 2 case 3
+  if (levelNumber == 1){
+    floor.create(0, 360, 'groundTile1');
+    floor.create(0, 400, 'groundTile2');
+    floor.create(200, 120, 'groundTile6');
+    floor.create(-60, 120, 'groundTile7');
+    floor.create(900, 170, 'groundTile8');
+  }
 }
 
-function explode(enemy){
-  console.log("BOOM")
+function explode(enemy){ //explosion at enemy position.
+  console.log("BOOM at enemy.x:"+ enemy.x +" and enemy.y: "+ enemy.y)
   createAnimation(enemy.x, enemy.y)
-
   //enemy.events.onInputDown.add(destroySprite, this);
 }
+
 function createAnimation(x, y){
   sprite = game.add.sprite(x, y, 'explosion')
   sprite.anchor.setTo(0.5,0.5)
@@ -187,35 +240,47 @@ function createAnimation(x, y){
 function destroySprite (sprite){
   sprite.destroy()
 }
+function bounce(){
+  character.velocity.y -= 600
+}
 
-function createEnemy(){
-  enemy = game.add.sprite(500, 100, 'enemy1')
-  game.physics.arcade.enable(enemy)
-  enemy.body.gravity.y = 500
-  enemy.body.collideWorldBounds = true;
-  enemy.anchor.setTo(0.5, 0.5)
+function createEnemies(){
+  enemies = game.add.group()
+  enemies.enableBody = true
+  //sprite(character.x + 200, character.y - 150, 'enemy1')
+  enemies.physicsBodyType = Phaser.Physics.ARCADE;
+
+  enemies.createMultiple(50, enemyType)
+  //enemies.anchor.setTo(0.5, 0.5)
+  enemies.setAll('collideWorldBounds', true);
+
+  //enemies.setAll('gravity', 500)
+  //enemies.setAll('outOfBoundsKill', false);
+}
+
+function createSingleEnemy(x, y, enemyType){
+    //enemies.add.sprite(x, y, enemyType);
+  if (game.time.now > nextEnemy && enemies.countDead() > 0)
+  {
+    console.log("create Enemy:" + enemyType)
+      //enemiess.createMultiple(50, weaponType);
+      nextEnemy = game.time.now + enemyCreateRate;
+      var enemy = enemies.getFirstDead();
+      enemy.anchor.setTo(0.5,0.5)
+      enemy.body.gravity.y = 500
+      enemy.reset(x, y);
+      enemy.body.velocity.x = -1 * (enemy.x-character.x)/3 //move towards character
+    }
 }
 
 
-
-// Map stuff
-
-function preloadMap() {
-    // loading tilesets
-    game.load.image('testTileImage', '../assets/test.png')
-    // game.load.image('secondTileset', '../assets/seconttileset.png')
-
-    // load Map JSON?
-
-}
-function switchWeapon()
-{
+function switchWeapon(){
   weaponNumber++
   if (weaponNumber > 2){
     weaponNumber = 1;
   }
-  if(weaponNumber == 1){weaponType = 'arrow'}
-  if(weaponNumber == 2){weaponType = 'arrow2'}
+  if(weaponNumber == 1){weaponType = 'arrow'; weaponSpeed = 600}
+  if(weaponNumber == 2){weaponType = 'arrow2'; weaponSpeed = 900}
   createWeapon()
 }
 
@@ -228,13 +293,35 @@ function createWeapon(){
   arrows.setAll('outOfBoundsKill', true);
 }
 
+function fire(weaponType) {
+    if (game.time.now > nextFire && arrows.countDead() > 0 && isDead == false)
+    {
+      console.log("fire")
+        //arrows.createMultiple(50, weaponType);
+        nextFire = game.time.now + fireRate;
+        var shot = arrows.getFirstDead();
+        shot.scale.setTo(0.5,0.5)
+        shot.anchor.setTo(0.5,0.5)
+        //shot.rotation = game.physics.arcade.angleToPointer(character)
+        shot.reset(character.x, character.y);
+        var direction
+        if (lookRight){direction = 1; shot.rotation = 0}else{direction = -1; shot.rotation = 3.14}
+        game.physics.arcade.moveToXY(shot, character.x+100*direction, character.y, weaponSpeed);
+    }
+}
 
+// Map stuff
+function preloadMap() {
+    // loading tilesets
+    game.load.image('testTileImage', '../assets/test.png')
+    // game.load.image('secondTileset', '../assets/seconttileset.png')
+    // load Map JSON?
+}
 
 function createMap() {
     map = game.add.tilemap()
     map.addTilesetImage('testTileImage')
     floorLayer = map.create('layer1', 50, 50, 32, 32)
-
     // Mockup map
     for (let i = 0; i < 20; i++) {
         map.putTile(0, i, 10, floorLayer)
@@ -246,9 +333,7 @@ function createMap() {
     for (let i = 25; i < 50; i++) {
         map.putTile(0, i, 12, floorLayer)
     }
-
     map.setCollision([0], true, floorLayer)
-
     // add Tiles
     //gameObject.input.addMoveCallback(function () {
     //    let pointer = gameObject.input.mousePointer
@@ -272,4 +357,9 @@ function updateMapMarker() {
         let tile = map.putTileWorldXY(tileId, pointer.worldX, pointer.worldY, 32, 32, floorLayer)
     }
 
+}
+function gameOver(){
+  character.kill()
+  isDead = true
+  game.stage.backgroundColor = '#992d2d';
 }

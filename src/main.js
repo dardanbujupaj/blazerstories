@@ -148,7 +148,7 @@ function update() {
     game.physics.arcade.overlap(arrows, floor, function(arrows){arrows.kill();})
     game.physics.arcade.collide(arrows, map, function(arrows){arrows.kill();})
     //kill(); dont know why this is here
-    console.log("arrows.x:"+ arrows.x + " and arrows.y: "+ arrows.y)})
+    console.log("arrows.x:"+ arrows.x + " and arrows.y: "+ arrows.y)
       //explode(enemy);
       //destroySprite(enemy)
     character.body.velocity.x = 0

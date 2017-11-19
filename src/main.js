@@ -36,12 +36,10 @@ function preload() {
     game.load.image('enemy1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_040.png')
     game.load.image('char', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_055.png')
     game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
-
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
     game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
     //leftWalkAnimation = player.animations.add('left', [4,5,6,7], 10, true);
     //rightWalkAnimation = player.animations.add('right', [8,9,10,11], 10, true);
-
     preloadMap()
 }
 
@@ -140,7 +138,6 @@ function update() {
       else {
         if (character.body.velocity.y >=-580){character.body.velocity.y -= 600}
       }
-
     }
   )// enemies + character collision BOUNCE IF ON TOP, OTHERWISE "GAME OVER"
 
@@ -165,7 +162,6 @@ function update() {
         character.angle = -15;
         lookRight = false
         //character.play('leftWalkAnimation') = implement once spritesheet is done
-
     }
   if (game.input.keyboard.isDown(Phaser.Keyboard.D)) //WALK RIGHT
     {
@@ -189,7 +185,6 @@ function update() {
   if (game.input.keyboard.downDuration(Phaser.Keyboard.SPACEBAR, 1)) //JUMP, double jump
     {
         //ADD ANIMATION
-
         if (jumps < 2 && allowJump){
           jumps++
           console.log("jumps used:" + jumps)
@@ -209,7 +204,6 @@ function render() {
     game.debug.text("weaponNumber: " + weaponNumber, 0, 60)
     game.debug.text("weaponType: " + weaponType, 0, 75)
     game.debug.text("allowJump?: " + allowJump, 0, 90)
-
 }
 
 function createLevel(levelNumber){ //TEST TILES
@@ -236,7 +230,6 @@ function createAnimation(x, y){
   sprite.animations.play('explode', 15, false, true)
   sprite.scale.set(0.2)
   sprite.smoothed = false
-
 }
 function destroySprite (sprite){
   sprite.destroy()
@@ -254,7 +247,6 @@ function createEnemies(){
   enemies.createMultiple(50, enemyType)
   //enemies.anchor.setTo(0.5, 0.5)
   enemies.setAll('collideWorldBounds', true);
-
   //enemies.setAll('gravity', 500)
   //enemies.setAll('outOfBoundsKill', false);
 }
@@ -270,6 +262,7 @@ function createSingleEnemy(x, y, enemyType){
       enemy.anchor.setTo(0.5,0.5)
       enemy.body.gravity.y = 500
       enemy.reset(x, y);
+
       enemy.body.velocity.x = -1 * (enemy.x-character.x)/3 //move towards character
     }
 }

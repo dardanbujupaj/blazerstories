@@ -1,28 +1,9 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '');
 
-var character, floor
-var speed = 4
-var arrows
-var enemies
-var sprite
-var map, floorLayer
-var enemyType = 'enemy1'
-let tileIndex = 0
-var createMapMode = false
-var weaponNumber = 1
-var weaponType = 'arrow'
-var fireRate = 300;
-var nextFire = 0;
-var nextEnemy = 0;
-var enemyCreateRate = 500;
-var levelNumber = 1
-var jumps = 0
-var lookRight = true
-var allowJump = true
-var isDead = false
-var weaponSpeed = 600
-var enemySpawnRAte = 4000
+game.state.add('game', gameState)
+game.state.add('menu', menuState)
 
+<<<<<<< HEAD
 function preload() {
     console.log("preload")
     var test = game.load.image('test', 'assets/test.png')
@@ -438,3 +419,6 @@ function gameOver(){
   isDead = true
   game.stage.backgroundColor = '#992d2d';
 }
+=======
+game.state.start('game')
+>>>>>>> 246639268da59f3487fa0ce2ba5a17eda0bcb04d

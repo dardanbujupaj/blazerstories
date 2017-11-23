@@ -1,10 +1,11 @@
+
 var gameState = {
     preload: preload,
     create: create,
     update: update,
     render: render
 }
-
+var bg
 var character, floor
 var speed = 4
 var arrows
@@ -39,7 +40,8 @@ function preload() {
     game.load.image('groundTile7', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_007.png')
     game.load.image('groundTile8', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_008.png')
     game.load.image('enemy1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_040.png')
-    game.load.image('char', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_055.png')
+    game.load.image('char', 'assets/images/mainC.png')
+    game.load.image('background', 'assets/images/BG.png')
     game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
 
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
@@ -51,14 +53,16 @@ function preload() {
 }
 
 function create() {
-    console.log("create")
+    bg = game.add.tileSprite(-200, -500, 2400, 1200, 'background');
 
+    console.log("create")
+    //game.stage.backgroundColor = '#FFFF21';
     // Press ESC to go to menu
     let menu = game.input.keyboard.addKey(Phaser.Keyboard.ESC)
     menu.onDown.add(() => {
         //game.state.start("menu")
         game.paused = !game.paused
-        
+
     })
 
     game.physics.startSystem(Phaser.Physics.ARCADE)
@@ -90,6 +94,8 @@ function create() {
 }
 
 function update() {
+
+    bg.tilePosition.set(game.camera.x * 0.5, game.camera.y * 0.5)
 
     if (createMapMode) {
         updateMapMarker()
@@ -458,4 +464,5 @@ function gameOver(){
   character.kill()
   isDead = true
   game.stage.backgroundColor = '#992d2d';
+
 }

@@ -9,17 +9,17 @@ var bg
 var character, floor
 var speed = 4
 var arrows
-var enemies
+
 var sprite
 var map, floorLayer
-var enemyType = 'enemy1'
+
 let tileIndex = 0
 var createMapMode = false
 var weaponNumber = 1
 var weaponType = 'arrow'
 var fireRate = 300;
 var nextFire = 0;
-var nextEnemy = 0;
+
 var enemyCreateRate = 500;
 var levelNumber = 1
 var jumps = 0
@@ -27,12 +27,20 @@ var lookRight = true
 var allowJump = true
 var isDead = false
 var weaponSpeed = 600
+
+//enemies:
+var enemies
+var enemyBullet
+var livingEnemies = [];
+var enemyType = 'enemy1'
+var nextEnemy = 0;
 var enemySpawnRAte = 4000
+var firingTimer1 = 0;
+
 
 function preload() {
     console.log("preload")
     var test = game.load.image('test', 'assets/test.png')
-
     game.world.setBounds(0,0,1280,600)
     game.load.image('groundTile1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_001.png')
     game.load.image('groundTile2', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_002.png')
@@ -43,9 +51,10 @@ function preload() {
     game.load.image('char', 'assets/images/mainC.png')
     game.load.image('background', 'assets/images/BG.png')
     game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
-
     game.load.image('arrow', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_070.png')
     game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
+    //enemy:
+    game.load.image('enemyBullet1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_041.png')
     //leftWalkAnimation = player.animations.add('left', [4,5,6,7], 10, true);
     //rightWalkAnimation = player.animations.add('right', [8,9,10,11], 10, true);
 
@@ -77,9 +86,11 @@ function create() {
 
     createLevel(1)
     createEnemies()
+    createEnemyBullets()
 
     //c = game.add.sprite(40, 0, 'test')
 
+// create character model, initiate it
     character = game.add.sprite(320, 240, 'char');
     game.physics.arcade.enable(character)
     character.body.gravity.y = 1500
@@ -87,6 +98,7 @@ function create() {
     character.anchor.setTo(0.5, 0.5)
     game.camera.follow(character)
 
+    //Switch weapon on Q toggle
     let toggleWeapon = game.input.keyboard.addKey(Phaser.Keyboard.Q)
     toggleWeapon.onDown.add(() => switchWeapon())
 
@@ -96,7 +108,7 @@ function create() {
 function update() {
 
     bg.tilePosition.set(game.camera.x * 0.5, game.camera.y * 0.5)
-
+    character.body.velocity.x = 0 // make him still as long as nothing happens
     if (createMapMode) {
         updateMapMarker()
     } else {
@@ -147,9 +159,27 @@ function update() {
       }
   )// character + floor collision: Wall jumps only 1 additional, ground 2 addiditional
 
+
+    if (game.time.now > firingTimer1){
+      enemyBulletFires();
+      firingTimer1 = game.time.now + 1500
+    }
+
+
     game.physics.arcade.collide(enemies, floorLayer)
     game.physics.arcade.collide(floor, floorLayer)
     game.physics.arcade.collide(enemies, map)
+    game.physics.arcade.collide(enemyBullets, character,
+      function(character, enemyBullets){
+      enemyBullets.kill();
+      destroySprite(enemyBullets);
+      if(character.body.touching.down == true){
+        character.body.velocity.y -= 600
+      }
+      else {
+        gameOver();
+      }
+    })
     game.physics.arcade.collide(enemies, character,
       function(character, enemies){
       jumps = 0;
@@ -167,12 +197,10 @@ function update() {
 
     //game.physics.arcade.collide(arrows, floorLayer, function(arrows){arrows.kill();})
     game.physics.arcade.overlap(arrows, floor, function(arrows){arrows.kill();})
+    game.physics.arcade.overlap(arrows, enemies, function(arrows, enemies){arrows.kill(); destroySprite(enemies);})//if shot hits an enemy, kill enemy (1 shot), kill bullet
     game.physics.arcade.collide(arrows, map, function(arrows){arrows.kill();})
-    //kill(); dont know why this is here
-    console.log("arrows.x:"+ arrows.x + " and arrows.y: "+ arrows.y)
-      //explode(enemy);
-      //destroySprite(enemy)
-    character.body.velocity.x = 0
+
+
 
     if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1)) //Create test enemy to the right of the character
       {
@@ -183,7 +211,7 @@ function update() {
     {
         //character.x -= speed;
         character.body.velocity.x -= 200
-        character.angle = -15;
+        character.angle = -3;
         lookRight = false
         //character.play('leftWalkAnimation') = implement once spritesheet is done
 
@@ -192,7 +220,7 @@ function update() {
     {
         //character.x += speed;
         character.body.velocity.x += 200
-        character.angle = 15;
+        character.angle = 3;
         lookRight = true
         //character.play('rightWalkAnimation') = implement once spritesheet is done
 
@@ -274,7 +302,8 @@ function createEnemies(){
   enemies.createMultiple(50, enemyType)
   //enemies.anchor.setTo(0.5, 0.5)
   enemies.setAll('collideWorldBounds', true);
-
+  enemies.setAll('anchor.x', 0.5);
+  enemies.setAll('anchor.y', 0.5);
   //enemies.setAll('gravity', 500)
   //enemies.setAll('outOfBoundsKill', false);
 }
@@ -287,10 +316,10 @@ function createSingleEnemy(x, y, enemyType){
       //enemiess.createMultiple(50, weaponType);
       nextEnemy = game.time.now + enemyCreateRate;
       var enemy = enemies.getFirstDead();
-      enemy.anchor.setTo(0.5,0.5)
+      enemy.anchor.setTo(0,0.5)
       enemy.body.gravity.y = 500
       enemy.reset(x, y);
-      enemy.body.velocity.x = -1 * (enemy.x-character.x)/3 //move towards character
+      enemy.body.velocity.x = -1 * (enemy.x-character.x)/6 //move towards character
     }
 }
 
@@ -329,6 +358,35 @@ function fire(weaponType) {
         if (lookRight){direction = 1; shot.rotation = 0}else{direction = -1; shot.rotation = 3.14}
         game.physics.arcade.moveToXY(shot, character.x+100*direction, character.y, weaponSpeed);
     }
+}
+function createEnemyBullets(){ //under create() called once
+  enemyBullets = game.add.group();
+  enemyBullets.enableBody = true;
+  enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
+  enemyBullets.createMultiple(30, 'enemyBullet1');
+  enemyBullets.setAll('anchor.x', 0.5);
+  enemyBullets.setAll('anchor.y', 0.5);
+  enemyBullets.setAll('outOfBoundsKill', true);
+  enemyBullets.setAll('checkWorldBounds', true);
+}
+
+function enemyBulletFires(){
+  enemyBullet = enemyBullets.getFirstExists(false)
+  livingEnemies.length = 0;
+  //enemyBullet.scale.set(0.5)
+  enemies.forEachAlive(function(enemy){
+    livingEnemies.push(enemy);
+  })
+  if (enemyBullet && livingEnemies.length > 0){
+    var random = game.rnd.integerInRange(0, livingEnemies.length-1) //for the game i dont want random.. i want all to fire at same rate.. beginning when in screen
+    var shooter = livingEnemies[random];
+
+    enemyBullet.reset(shooter.body.x, shooter.body.y) //spawn bullet at enemy
+    var enemyShootDirection = -1;
+    if (shooter.body.x < character.x){enemyShootDirection = 1; enemyBullet.rotation = 0 + 0.5 * 3.14}else{enemyShootDirection = -1; enemyBullet.rotation = 3.14 * (1 + 0.5)}
+    //enemyBullet.anchor.setTo(0.5, 0.5)
+    game.physics.arcade.moveToXY(enemyBullet,shooter.body.x+enemyShootDirection,shooter.body.y,180); //move bullet horizontally from enemy
+  }
 }
 
 // Map stuff
@@ -463,6 +521,7 @@ function getMockupMap() {
 function gameOver(){
   character.kill()
   isDead = true
+  bg.kill();
   game.stage.backgroundColor = '#992d2d';
 
 }

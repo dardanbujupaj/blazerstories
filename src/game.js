@@ -28,11 +28,13 @@ var allowJump = true
 var isDead = false
 var weaponSpeed = 600
 
+var levelEndX
+
 //enemies:
 var enemies
 var enemyBullet
 var livingEnemies = [];
-var enemyType = 'enemy1'
+var enemyType = 'pacmanLauncher'
 var nextEnemy = 0;
 var enemySpawnRAte = 4000
 var firingTimer1 = 0;
@@ -48,6 +50,7 @@ function preload() {
     game.load.image('groundTile7', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_007.png')
     game.load.image('groundTile8', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_008.png')
     game.load.image('enemy1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_040.png')
+
     game.load.image('char', 'assets/images/mainC.png')
     game.load.image('background', 'assets/images/BG.png')
     game.load.image('arrow2', 'assets/arrow_minecraft_1.png')
@@ -55,6 +58,8 @@ function preload() {
     game.load.spritesheet('explosion', 'assets/animations/explosion1.png', 216, 209, 15)
     //enemy:
     game.load.image('enemyBullet1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_041.png')
+    game.load.spritesheet('pacmanBullet','assets/images/bullet.png', 41, 32, 3)
+    game.load.image('pacmanLauncher', 'assets/images/bulletshooter.png')
     //leftWalkAnimation = player.animations.add('left', [4,5,6,7], 10, true);
     //rightWalkAnimation = player.animations.add('right', [8,9,10,11], 10, true);
 
@@ -102,11 +107,17 @@ function create() {
     let toggleWeapon = game.input.keyboard.addKey(Phaser.Keyboard.Q)
     toggleWeapon.onDown.add(() => switchWeapon())
 
-
+    stateText = game.add.text(800, 300, ' ', {font: '84px Arial', fill: "#fff"})
+    stateText.anchor.setTo(0.5, 0.5)
+    stateText.visible = false;
 }
 
 function update() {
 
+    if (endOfMap()){
+      stateText.text = "Finished Map " + mapName;
+      stateText.visible = true;
+    }
     bg.tilePosition.set(game.camera.x * 0.5, game.camera.y * 0.5)
     character.body.velocity.x = 0 // make him still as long as nothing happens
     if (createMapMode) {
@@ -174,7 +185,7 @@ function update() {
       enemyBullets.kill();
       destroySprite(enemyBullets);
       if(character.body.touching.down == true){
-        character.body.velocity.y -= 600
+        character.body.velocity.y -= 800
       }
       else {
         gameOver();
@@ -201,10 +212,9 @@ function update() {
     game.physics.arcade.collide(arrows, map, function(arrows){arrows.kill();})
 
 
-
     if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1)) //Create test enemy to the right of the character
       {
-        createSingleEnemy(character.x + 200, character.y - 150, 'enemy1')
+        createSingleEnemy(character.x + 200, character.y - 50, 'enemy1')
       }
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.A)) //WALK LEFT
@@ -262,6 +272,7 @@ function render() {
 
 function createLevel(levelNumber){ //TEST TILES
   //load file "levelNumber" case 1 case 2 case 3
+  levelEndX = 1160
   if (levelNumber == 1){
     floor.create(0, 360, 'groundTile1');
     floor.create(0, 400, 'groundTile2');
@@ -316,10 +327,10 @@ function createSingleEnemy(x, y, enemyType){
       //enemiess.createMultiple(50, weaponType);
       nextEnemy = game.time.now + enemyCreateRate;
       var enemy = enemies.getFirstDead();
-      enemy.anchor.setTo(0,0.5)
+      enemy.anchor.setTo(0.5,0.5)
       enemy.body.gravity.y = 500
       enemy.reset(x, y);
-      enemy.body.velocity.x = -1 * (enemy.x-character.x)/6 //move towards character
+      //enemy.body.velocity.x = -1 * (enemy.x-character.x)/6 //move towards character
     }
 }
 
@@ -363,7 +374,7 @@ function createEnemyBullets(){ //under create() called once
   enemyBullets = game.add.group();
   enemyBullets.enableBody = true;
   enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
-  enemyBullets.createMultiple(30, 'enemyBullet1');
+  enemyBullets.createMultiple(30, 'pacmanBullet');
   enemyBullets.setAll('anchor.x', 0.5);
   enemyBullets.setAll('anchor.y', 0.5);
   enemyBullets.setAll('outOfBoundsKill', true);
@@ -381,10 +392,13 @@ function enemyBulletFires(){
     var random = game.rnd.integerInRange(0, livingEnemies.length-1) //for the game i dont want random.. i want all to fire at same rate.. beginning when in screen
     var shooter = livingEnemies[random];
 
-    enemyBullet.reset(shooter.body.x, shooter.body.y) //spawn bullet at enemy
-    var enemyShootDirection = -1;
-    if (shooter.body.x < character.x){enemyShootDirection = 1; enemyBullet.rotation = 0 + 0.5 * 3.14}else{enemyShootDirection = -1; enemyBullet.rotation = 3.14 * (1 + 0.5)}
+    var enemyShootDirection;
+    //if (shooter.body.x < character.x){enemyShootDirection = 1; }else{enemyShootDirection = -1;enemyBullet.scale.x *= -1}
+    if (shooter.body.x > character.x){enemyShootDirection = -1; enemyBullet.scale.x *= -1}else{enemyShootDirection = 1;}
     //enemyBullet.anchor.setTo(0.5, 0.5)
+    enemyBullet.reset(shooter.body.x, shooter.body.y) //spawn bullet at enemy
+    enemyBullet.animations.add('pacmanBullet', [0,1,2,3,2,1])
+    enemyBullet.play('pacmanBullet', 16,  true, false)
     game.physics.arcade.moveToXY(enemyBullet,shooter.body.x+enemyShootDirection,shooter.body.y,180); //move bullet horizontally from enemy
   }
 }
@@ -518,10 +532,22 @@ function getMockupMap() {
 
     return data
 }
+function endOfMap(){
+  if (character.body.x >= levelEndX){
+    stateText.text = "Yay you finished level x";
+    stateText.visible = true;
+    return true;
+  }
+  return false
+}
+
 function gameOver(){
   character.kill()
   isDead = true
   bg.kill();
+
+  stateText.text = "Game Over";
+  stateText.visible = true;
   game.stage.backgroundColor = '#992d2d';
 
 }

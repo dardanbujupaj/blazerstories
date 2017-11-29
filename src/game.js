@@ -39,11 +39,13 @@ var nextEnemy = 0;
 var enemySpawnRAte = 4000
 var firingTimer1 = 0;
 
+var enemyShitroller
+
 
 function preload() {
     console.log("preload")
     var test = game.load.image('test', 'assets/test.png')
-    game.world.setBounds(0,0,1280,600)
+
     game.load.image('groundTile1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_001.png')
     game.load.image('groundTile2', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_002.png')
     game.load.image('groundTile6', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_006.png')
@@ -59,10 +61,13 @@ function preload() {
     //enemy:
     game.load.image('enemyBullet1', 'assets/kenney_platformerpack_industrial/PNG/Default_size/platformIndustrial_041.png')
     game.load.spritesheet('pacmanBullet','assets/images/bullet.png', 41, 32, 3)
+    game.load.spritesheet('shitroller1','assets/images/shitroller.png', 42, 31, 3)//SHIT SKATEBOARD
     game.load.image('pacmanLauncher', 'assets/images/bulletshooter.png')
     //leftWalkAnimation = player.animations.add('left', [4,5,6,7], 10, true);
     //rightWalkAnimation = player.animations.add('right', [8,9,10,11], 10, true);
 
+
+    game.world.setBounds(0,0,2300,600)
     preloadMap()
 }
 
@@ -92,6 +97,7 @@ function create() {
     createLevel(1)
     createEnemies()
     createEnemyBullets()
+    createEnemyShitRollers()
 
     //c = game.add.sprite(40, 0, 'test')
 
@@ -127,7 +133,9 @@ function update() {
             fire(weaponType);
         }
     }
-
+    if (character.body.onFloor()){
+      gameOver()
+    }
     game.physics.arcade.collide(floor, character,
       function(floor, character) {
         jumps = 0;
@@ -180,6 +188,19 @@ function update() {
     game.physics.arcade.collide(enemies, floorLayer)
     game.physics.arcade.collide(floor, floorLayer)
     game.physics.arcade.collide(enemies, map)
+    game.physics.arcade.collide(enemyShitrollers, floorLayer)
+    game.physics.arcade.collide(enemyShitrollers, character,
+      function(character, enemyShitrollers){
+        enemyShitrollers.kill();
+        destroySprite(enemyShitrollers);
+        if(character.body.touching.up == true){
+          //enemyShitrollers.body.velocity.y -= 200
+        }
+        else {
+          gameOver();
+        }
+  })
+
     game.physics.arcade.collide(enemyBullets, character,
       function(character, enemyBullets){
       enemyBullets.kill();
@@ -214,7 +235,17 @@ function update() {
 
     if (game.input.keyboard.downDuration(Phaser.Keyboard.E, 1)) //Create test enemy to the right of the character
       {
-        createSingleEnemy(character.x + 200, character.y - 50, 'enemy1')
+        var random = game.rnd.integerInRange(0, 1)
+        if (random == 1){
+          enemyType = 'shitroller1'
+          createShitroller(character.x + 300, character.y -50, enemyType)
+        }
+        else
+        {
+          enemyType = 'pacmanLauncher';
+          createSingleEnemy(character.x + 200, character.y - 50, enemyType)
+        }
+
       }
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.A)) //WALK LEFT
@@ -272,7 +303,7 @@ function render() {
 
 function createLevel(levelNumber){ //TEST TILES
   //load file "levelNumber" case 1 case 2 case 3
-  levelEndX = 1160
+  levelEndX = 2200
   if (levelNumber == 1){
     floor.create(0, 360, 'groundTile1');
     floor.create(0, 400, 'groundTile2');
@@ -381,6 +412,32 @@ function createEnemyBullets(){ //under create() called once
   enemyBullets.setAll('checkWorldBounds', true);
 }
 
+function createEnemyShitRollers(){
+  enemyShitrollers = game.add.group();
+  enemyShitrollers.enableBody = true;
+  enemyShitrollers.physicsBodyType = Phaser.Physics.ARCADE;
+  enemyShitrollers.createMultiple(30, 'shitroller1');
+  enemyShitrollers.setAll('anchor.x', 0.5);
+  enemyShitrollers.setAll('anchor.y', 0.5);
+  enemyShitrollers.setAll('outOfBoundsKill', true);
+  enemyShitrollers.setAll('checkWorldBounds', true);
+}
+
+function createShitroller(x, y){
+  if (game.time.now > nextEnemy && enemyShitrollers.countDead() > 0)
+  {
+    console.log("create Enemy:" + enemyType)
+      //enemiess.createMultiple(50, weaponType);
+      nextEnemy = game.time.now + enemyCreateRate;
+      enemyShitroller = enemyShitrollers.getFirstDead();
+      enemyShitroller.body.gravity.y = 500
+      enemyShitroller.reset(x, y)
+      enemyShitroller.animations.add('shitroller1', [0,1,2,3,2,1])
+      enemyShitroller.play('shitroller1', 16,  true, false)
+  //enemyShitroller = enemyShitrollers.getFirstExists(false)
+      game.physics.arcade.moveToXY(enemyShitroller, character.body.x , character.body.y, 100);}
+}
+
 function enemyBulletFires(){
   enemyBullet = enemyBullets.getFirstExists(false)
   livingEnemies.length = 0;
@@ -394,7 +451,7 @@ function enemyBulletFires(){
 
     var enemyShootDirection;
     //if (shooter.body.x < character.x){enemyShootDirection = 1; }else{enemyShootDirection = -1;enemyBullet.scale.x *= -1}
-    if (shooter.body.x > character.x){enemyShootDirection = -1; enemyBullet.scale.x *= -1}else{enemyShootDirection = 1;}
+    if (shooter.body.x > character.x){enemyShootDirection = -1; enemyBullet.scale.x = -1}else{enemyShootDirection = 1;}
     //enemyBullet.anchor.setTo(0.5, 0.5)
     enemyBullet.reset(shooter.body.x, shooter.body.y) //spawn bullet at enemy
     enemyBullet.animations.add('pacmanBullet', [0,1,2,3,2,1])
@@ -526,7 +583,7 @@ function getMockupMap() {
         data.push({index: 0, x: i, y:15})
     }
 
-    for (let i = 25; i < 50; i++) {
+    for (let i = 25; i < 90; i++) {
         data.push({index: 0, x: i, y:12})
     }
 
